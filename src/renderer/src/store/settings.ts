@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { TRANSLATE_PROMPT } from '@renderer/config/prompts'
 import { CodeStyleVarious, LanguageVarious, ThemeMode, TranslateLanguageVarious } from '@renderer/types'
+import { WebDAVSyncState } from './runtime'
 
 export type SendMessageShortcut = 'Enter' | 'Shift+Enter' | 'Ctrl+Enter' | 'Command+Enter'
 
@@ -15,6 +16,8 @@ export const DEFAULT_SIDEBAR_ICONS: SidebarIcon[] = [
   'knowledge',
   'files'
 ]
+
+export interface NutstoreSyncRuntime extends WebDAVSyncState {}
 
 export interface SettingsState {
   showAssistants: boolean
@@ -92,6 +95,13 @@ export interface SettingsState {
   obsidianTages: string | null
   joplinToken: string | null
   joplinUrl: string | null
+
+  // Nutstore Integration
+  nutstoreToken: string | null
+  nutstorePath: string
+  nutstoreAutoSync: boolean
+  nutstoreSyncInterval: number
+  nutstoreSyncRuntime: NutstoreSyncRuntime
 }
 
 export type MultiModelMessageStyle = 'horizontal' | 'vertical' | 'fold' | 'grid'
@@ -167,7 +177,16 @@ const initialState: SettingsState = {
   obsidianFolder: '',
   obsidianTages: '',
   joplinToken: '',
-  joplinUrl: ''
+  joplinUrl: '',
+  nutstoreToken: '',
+  nutstorePath: '/cherry-studio',
+  nutstoreAutoSync: false,
+  nutstoreSyncInterval: 0,
+  nutstoreSyncRuntime: {
+    lastSyncTime: null,
+    syncing: false,
+    lastSyncError: null
+  }
 }
 
 const settingsSlice = createSlice({
@@ -389,6 +408,22 @@ const settingsSlice = createSlice({
     },
     setMessageNavigation: (state, action: PayloadAction<'none' | 'buttons' | 'anchor'>) => {
       state.messageNavigation = action.payload
+    },
+    setNutstoreToken: (state, action: PayloadAction<string>) => {
+      state.nutstoreToken = action.payload
+    },
+    setNutstorePath: (state, action: PayloadAction<string>) => {
+      console.log(state, action.payload)
+      state.nutstorePath = action.payload
+    },
+    setNutstoreAutoSync: (state, action: PayloadAction<boolean>) => {
+      state.nutstoreAutoSync = action.payload
+    },
+    setNutstoreSyncInterval: (state, action: PayloadAction<number>) => {
+      state.nutstoreSyncInterval = action.payload
+    },
+    setNutstoreSyncRuntime: (state, action: PayloadAction<Partial<WebDAVSyncState>>) => {
+      state.nutstoreSyncRuntime = { ...state.nutstoreSyncRuntime, ...action.payload }
     }
   }
 })
@@ -463,7 +498,12 @@ export const {
   setObsidianTages,
   setJoplinToken,
   setJoplinUrl,
-  setMessageNavigation
+  setMessageNavigation,
+  setNutstoreToken,
+  setNutstorePath,
+  setNutstoreAutoSync,
+  setNutstoreSyncInterval,
+  setNutstoreSyncRuntime
 } = settingsSlice.actions
 
 export default settingsSlice.reducer
