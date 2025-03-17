@@ -13,6 +13,7 @@ import BackupPopup from '@renderer/components/Popups/BackupPopup'
 import RestorePopup from '@renderer/components/Popups/RestorePopup'
 import { useTheme } from '@renderer/context/ThemeProvider'
 import { useKnowledgeFiles } from '@renderer/hooks/useKnowledgeFiles'
+import { NutstoreIcon } from '@renderer/integration/nutstore'
 import { reset } from '@renderer/services/BackupService'
 import { AppInfo } from '@renderer/types'
 import { formatFileSize } from '@renderer/utils'
@@ -24,6 +25,7 @@ import styled from 'styled-components'
 import { SettingContainer, SettingDivider, SettingGroup, SettingRow, SettingRowTitle, SettingTitle } from '..'
 import MarkdownExportSettings from './MarkdownExportSettings'
 import NotionSettings from './NotionSettings'
+import NutstoreSettings from './NutstoreSettings'
 import ObsidianSettings from './ObsidianSettings'
 import WebDavSettings from './WebDavSettings'
 import YuqueSettings from './YuqueSettings'
@@ -38,6 +40,7 @@ const DataSettings: FC = () => {
   const menuItems = [
     { key: 'data', title: 'settings.data.data.title', icon: <DatabaseOutlined style={{ fontSize: 16 }} /> },
     { key: 'webdav', title: 'settings.data.webdav.title', icon: <CloudSyncOutlined style={{ fontSize: 16 }} /> },
+    { key: 'nutstore', title: 'settings.data.nutstore.title', icon: <NutstoreIcon /> },
     {
       key: 'markdown_export',
       title: 'settings.data.markdown_export.title',
@@ -187,6 +190,7 @@ const DataSettings: FC = () => {
           </>
         )}
         {menu === 'webdav' && <WebDavSettings />}
+        {menu === 'nutstore' && <NutstoreSettings />}
         {menu === 'markdown_export' && <MarkdownExportSettings />}
         {menu === 'notion' && <NotionSettings />}
         {menu === 'yuque' && <YuqueSettings />}
