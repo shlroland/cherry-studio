@@ -9,7 +9,6 @@ import { CHERRY_STUDIO_PROTOCOL, handleProtocolUrl, registerProtocolClient } fro
 import { registerShortcuts } from './services/ShortcutService'
 import { TrayService } from './services/TrayService'
 import { windowService } from './services/WindowService'
-import { CHERRY_STUDIO_PROTOCOL, handleProtocolUrl, registerProtocolClient } from './services/ProtocolClient'
 
 // Check for single instance lock
 if (!app.requestSingleInstanceLock()) {
