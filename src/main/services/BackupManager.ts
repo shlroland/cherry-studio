@@ -8,6 +8,7 @@ import * as path from 'path'
 
 import WebDav from './WebDav'
 import { windowService } from './WindowService'
+import { CreateDirectoryOptions } from 'webdav'
 
 class BackupManager {
   private tempDir = path.join(app.getPath('temp'), 'cherry-studio', 'backup', 'temp')
@@ -251,6 +252,16 @@ class BackupManager {
   async checkConnection(_: Electron.IpcMainInvokeEvent, webdavConfig: WebDavConfig) {
     const webdavClient = new WebDav(webdavConfig)
     return await webdavClient.checkConnection()
+  }
+
+  async createDirectory(
+    _: Electron.IpcMainInvokeEvent,
+    webdavConfig: WebDavConfig,
+    path: string,
+    options?: CreateDirectoryOptions
+  ) {
+    const webdavClient = new WebDav(webdavConfig)
+    return await webdavClient.createDirectory(path, options)
   }
 }
 

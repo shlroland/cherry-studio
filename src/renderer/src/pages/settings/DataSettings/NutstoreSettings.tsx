@@ -1,30 +1,38 @@
-import { CheckOutlined, LoadingOutlined, SyncOutlined } from '@ant-design/icons'
 import { HStack } from '@renderer/components/Layout'
 import { useTheme } from '@renderer/context/ThemeProvider'
 import { useSettings } from '@renderer/hooks/useSettings'
-import { useNutstoreSSO } from '@renderer/integration/nutstore'
-import { decryptToken, nutstoreSsoLogin } from '@renderer/integration/nutstore/sso'
+import {
+  decryptToken,
+  nutstoreSsoLogin,
+  useNutstoreSSO,
+  fileStatToStatModel,
+  getDirectoryContents
+} from '@renderer/integration/nutstore'
+import { useAppDispatch } from '@renderer/store'
+import {
+  setNutstoreToken,
+  setNutstorePath,
+  setNutstoreAutoSync,
+  setNutstoreSyncInterval
+} from '@renderer/store/settings'
+import { modalConfirm } from '@renderer/utils'
 import {
   backupToNutstore,
   checkConnection,
+  createDirectory,
   restoreFromNutstore,
   startNutstoreAutoSync,
   stopNutstoreAutoSync
 } from '@renderer/services/NutstoreService'
-import { useAppDispatch } from '@renderer/store'
-import {
-  setNutstoreAutoSync,
-  setNutstorePath,
-  setNutstoreSyncInterval,
-  setNutstoreToken
-} from '@renderer/store/settings'
-import { modalConfirm } from '@renderer/utils'
 import { Button, Input, Select, Typography } from 'antd'
-import dayjs from 'dayjs'
 import { FC, useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SettingDivider, SettingGroup, SettingRow, SettingRowTitle, SettingTitle } from '..'
+import { CheckOutlined, FolderOutlined, LoadingOutlined, SyncOutlined } from '@ant-design/icons'
+import NutstorePathPopup from '@renderer/components/Popups/NutsorePathPopup'
+import {} from '@renderer/integration/nutstore/webdav'
+import dayjs from 'dayjs'
 
 const NutstoreSettings: FC = () => {
   const { theme } = useTheme()
@@ -125,6 +133,37 @@ const NutstoreSettings: FC = () => {
     }
   }
 
+  const handleClickPathChange = async () => {
+    if (!nutstoreToken) {
+      return
+    }
+
+    const result = await decryptToken(nutstoreToken)
+
+    if (!result) {
+      return
+    }
+
+    const targetPath = await NutstorePathPopup.show({
+      ls: async (target: string) => {
+        const { username, access_token } = result
+        const token = window.btoa(`${username}:${access_token}`)
+        const items = await getDirectoryContents(token, target)
+        return items.map(fileStatToStatModel)
+      },
+      mkdirs: async (path) => {
+        await createDirectory(path)
+      }
+    })
+
+    if (!targetPath) {
+      return
+    }
+
+    setStoragePath(targetPath)
+    dispatch(setNutstorePath(targetPath))
+  }
+
   const renderSyncStatus = () => {
     if (!nutstoreSyncRuntime.lastSyncTime && !nutstoreSyncRuntime.syncing && !nutstoreSyncRuntime.lastSyncError) {
       return <span style={{ color: 'var(--text-secondary)' }}>{t('settings.data.webdav.noSync')}</span>
@@ -191,13 +230,18 @@ const NutstoreSettings: FC = () => {
           <SettingDivider />
           <SettingRow>
             <SettingRowTitle>{t('settings.data.nutstore.path')}</SettingRowTitle>
-            <Input
-              placeholder={t('settings.data.nutstore.path.placeholder')}
-              style={{ width: 250 }}
-              value={nutstorePath}
-              onChange={(e) => setStoragePath(e.target.value)}
-              onBlur={() => dispatch(setNutstorePath(storagePath || ''))}
-            />
+            <HStack gap="4px" justifyContent="space-between">
+              <Input
+                placeholder={t('settings.data.nutstore.path.placeholder')}
+                style={{ width: 250 }}
+                value={nutstorePath}
+                onChange={(e) => setStoragePath(e.target.value)}
+                onBlur={() => dispatch(setNutstorePath(storagePath || ''))}
+              />
+              <Button type="default" onClick={handleClickPathChange}>
+                <FolderOutlined />
+              </Button>
+            </HStack>
           </SettingRow>
           <SettingDivider />
           <SettingRow>

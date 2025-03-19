@@ -5,6 +5,7 @@ import { setNutstoreSyncRuntime } from '@renderer/store/settings'
 import { WebDavConfig } from '@renderer/types'
 
 import { getBackupData, handleData } from './BackupService'
+import { type CreateDirectoryOptions } from 'webdav'
 
 function getNutstoreToken() {
   const nutstoreToken = store.getState().settings.nutstoreToken
@@ -201,4 +202,17 @@ export function stopNutstoreAutoSync() {
   }
   isAutoBackupRunning = false
   autoSyncStarted = false
+}
+
+export async function createDirectory(path: string, options?: CreateDirectoryOptions) {
+  const nutstoreToken = getNutstoreToken()
+  if (!nutstoreToken) {
+    return
+  }
+  const config = await createNutstoreConfig(nutstoreToken)
+  if (!config) {
+    return
+  }
+
+  await window.api.backup.createDirectory(config, path, options)
 }
