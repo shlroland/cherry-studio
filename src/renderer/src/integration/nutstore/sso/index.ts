@@ -7,6 +7,8 @@ export interface OAuthResponse {
   access_token: string
 }
 
+type DecryptFunction = (app: string, s: string) => string
+
 // 使用闭包创建一个可以在外部resolve的Promise
 let resolveLastPromise: (value: {
   createOAuthUrl: (secret: Secret) => string
