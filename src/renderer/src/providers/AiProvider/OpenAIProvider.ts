@@ -30,7 +30,7 @@ import {
 } from '@renderer/types'
 import { ChunkType } from '@renderer/types/chunk'
 import { Message } from '@renderer/types/newMessage'
-import { removeSpecialCharactersForTopicName } from '@renderer/utils'
+import { removeSpecialCharactersForTopicName, uuid } from '@renderer/utils'
 import { addImageFileToContents } from '@renderer/utils/formats'
 import { convertLinks } from '@renderer/utils/linkConverter'
 import { mcpToolCallResponseToOpenAIMessage, parseAndCallTools } from '@renderer/utils/mcp-tools'
@@ -471,7 +471,8 @@ export default class OpenAIProvider extends BaseProvider {
           },
           {
             signal,
-            timeout: this.getTimeout(model)
+            timeout: this.getTimeout(model),
+            headers: this.getHeaders(messages[0].topicId)
           }
         )
         await processStream(newStream, idx + 1)
@@ -639,7 +640,8 @@ export default class OpenAIProvider extends BaseProvider {
       },
       {
         signal,
-        timeout: this.getTimeout(model)
+        timeout: this.getTimeout(model),
+        headers: this.getHeaders(messages[0].topicId)
       }
     )
 
@@ -689,14 +691,19 @@ export default class OpenAIProvider extends BaseProvider {
     const stream = isSupportedStreamOutput()
     let text = ''
     if (stream) {
-      const response = await this.sdk.responses.create({
-        model: model.id,
-        input: messageForApi,
-        stream: true,
-        temperature: this.getTemperature(assistant, model),
-        top_p: this.getTopP(assistant, model),
-        ...this.getResponseReasoningEffort(assistant, model)
-      })
+      const response = await this.sdk.responses.create(
+        {
+          model: model.id,
+          input: messageForApi,
+          stream: true,
+          temperature: this.getTemperature(assistant, model),
+          top_p: this.getTopP(assistant, model),
+          ...this.getResponseReasoningEffort(assistant, model)
+        },
+        {
+          headers: this.getHeaders()
+        }
+      )
 
       for await (const chunk of response) {
         switch (chunk.type) {
@@ -753,12 +760,17 @@ export default class OpenAIProvider extends BaseProvider {
       content: userMessageContent
     }
 
-    const response = await this.sdk.responses.create({
-      model: model.id,
-      input: [systemMessage, userMessage],
-      stream: false,
-      max_output_tokens: 1000
-    })
+    const response = await this.sdk.responses.create(
+      {
+        model: model.id,
+        input: [systemMessage, userMessage],
+        stream: false,
+        max_output_tokens: 1000
+      },
+      {
+        headers: this.getHeaders()
+      }
+    )
     return removeSpecialCharactersForTopicName(response.output_text.substring(0, 50))
   }
 
@@ -788,7 +800,8 @@ export default class OpenAIProvider extends BaseProvider {
         },
         {
           signal,
-          timeout: 20 * 1000
+          timeout: 20 * 1000,
+          headers: this.getHeaders()
         }
       )
       .finally(cleanup)
@@ -839,14 +852,19 @@ export default class OpenAIProvider extends BaseProvider {
    */
   public async generateText({ prompt, content }: { prompt: string; content: string }): Promise<string> {
     const model = getDefaultModel()
-    const response = await this.sdk.responses.create({
-      model: model.id,
-      stream: false,
-      input: [
-        { role: 'system', content: prompt },
-        { role: 'user', content }
-      ]
-    })
+    const response = await this.sdk.responses.create(
+      {
+        model: model.id,
+        stream: false,
+        input: [
+          { role: 'system', content: prompt },
+          { role: 'user', content }
+        ]
+      },
+      {
+        headers: this.getHeaders()
+      }
+    )
     return response.output_text
   }
 
@@ -877,11 +895,16 @@ export default class OpenAIProvider extends BaseProvider {
       }
       throw new Error('Empty streaming response')
     } else {
-      const response = await this.sdk.responses.create({
-        model: model.id,
-        input: [{ role: 'user', content: 'hi' }],
-        stream: false
-      })
+      const response = await this.sdk.responses.create(
+        {
+          model: model.id,
+          input: [{ role: 'user', content: 'hi' }],
+          stream: false
+        },
+        {
+          headers: this.getHeaders()
+        }
+      )
       if (!response.output_text) {
         throw new Error('Empty response')
       }
@@ -895,7 +918,9 @@ export default class OpenAIProvider extends BaseProvider {
    */
   public async models(): Promise<OpenAI.Models.Model[]> {
     try {
-      const response = await this.sdk.models.list()
+      const response = await this.sdk.models.list({
+        headers: this.getHeaders()
+      })
       const models = response.data || []
       models.forEach((model) => {
         model.id = model.id.trim()
@@ -1070,5 +1095,23 @@ export default class OpenAIProvider extends BaseProvider {
       input: 'hi'
     })
     return data.data[0].embedding.length
+  }
+
+  /**
+   * 坚果云 Provider 特有功能，需要添加 token 和 taskId
+   * @param taskId - The taskId
+   * @returns The headers
+   */
+  private getHeaders(taskId?: string) {
+    let headers: Record<string, string> = {}
+
+    if (this.provider.id === 'nutstore') {
+      headers = {
+        token: `${this.apiKey}`,
+        taskId: taskId || uuid()
+      }
+    }
+
+    return headers
   }
 }

@@ -35,6 +35,7 @@ import HealthCheckPopup from './HealthCheckPopup'
 import LMStudioSettings from './LMStudioSettings'
 import ModelList, { ModelStatus } from './ModelList'
 import ModelListSearchBar from './ModelListSearchBar'
+import { NutstoreSettings } from './NutstoreSettings'
 import ProviderOAuth from './ProviderOAuth'
 import ProviderSettingsPopup from './ProviderSettingsPopup'
 import SelectProviderModelPopup from './SelectProviderModelPopup'
@@ -350,7 +351,7 @@ const ProviderSetting: FC<Props> = ({ provider: _provider }) => {
           }}
           spellCheck={false}
           autoFocus={provider.enabled && apiKey === '' && !isProviderSupportAuth(provider)}
-          disabled={provider.id === 'copilot'}
+          disabled={provider.id === 'copilot' || provider.id === 'nutstore'}
         />
         <Button
           type={apiValid ? 'primary' : 'default'}
@@ -409,6 +410,7 @@ const ProviderSetting: FC<Props> = ({ provider: _provider }) => {
       {provider.id === 'lmstudio' && <LMStudioSettings />}
       {provider.id === 'gpustack' && <GPUStackSettings />}
       {provider.id === 'copilot' && <GithubCopilotSettings provider={provider} setApiKey={setApiKey} />}
+      {provider.id === 'nutstore' && <NutstoreSettings />}
       <SettingSubtitle style={{ marginBottom: 5 }}>
         <Space align="center" style={{ width: '100%', justifyContent: 'space-between' }}>
           <HStack alignItems="center" gap={5}>
