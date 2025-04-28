@@ -287,7 +287,7 @@ const ProviderSetting: FC<Props> = ({ provider: _provider }) => {
   // Save apiKey to provider when unmount
   useEffect(() => {
     return () => {
-      if (apiKey.trim() && apiKey !== provider.apiKey) {
+      if (apiKey != null && apiKey.trim() && apiKey !== provider.apiKey) {
         updateProvider({ ...provider, apiKey })
       }
     }

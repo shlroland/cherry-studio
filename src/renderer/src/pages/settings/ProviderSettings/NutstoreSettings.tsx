@@ -42,7 +42,7 @@ export function NutstoreSettings({ setApiKey }: { setApiKey: (apiKey: string) =>
       apiKey: data.access_token,
       apiHost: (await isDev())
         ? 'http://localhost.eo2suite.cn:9000/cherrystudio/llm-router/'
-        : 'https://webdav-connect.jianguoyun.net.cn/cherrystudio/llm-router/'
+        : 'https://ai-assistant.jianguoyun.net.cn/cherrystudio/llm-router/'
     })
   }, [provider, updateProvider, nutstorePassword, nutstoreUsername])
 
