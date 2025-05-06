@@ -6,6 +6,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import { PersistGate } from 'redux-persist/integration/react'
 
 import Sidebar from './components/app/Sidebar'
+import { NutstoreLogin } from './components/NutstoreLogin'
 import TopViewContainer from './components/TopView'
 import AntdProvider from './context/AntdProvider'
 import StyleSheetManager from './context/StyleSheetManager'
@@ -30,6 +31,7 @@ function App(): React.ReactElement {
             <SyntaxHighlighterProvider>
               <PersistGate loading={null} persistor={persistor}>
                 <TopViewContainer>
+                  <NutstoreLogin />
                   <HashRouter>
                     <NavigationHandler />
                     <Sidebar />
